@@ -79,3 +79,7 @@ void Plant::update() {
 	}
 }
 
+void Plant::update(int tick) {
+	for (int i = 0; i < tick; i++)
+		update();
+}

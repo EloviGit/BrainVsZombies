@@ -112,7 +112,7 @@ Explosion::Explosion(int _time, ExplosionType _type, int row, float col, int roo
 
 Zombie* Explosion::TestIfAllHit(std::vector<Zombie*> zombies) {
 	for (std::vector<Zombie*>::iterator it = zombies.begin(); it != zombies.end(); it++) {
-		if (!RectangleIntersectCircle(
+		if (!(*it)->isDamagable() || !RectangleIntersectCircle(
 			(*it)->defAbscissa(),
 			(*it)->defOrdinate(),
 			(*it)->defWidth(),
@@ -127,9 +127,26 @@ Zombie* Explosion::TestIfAllHit(std::vector<Zombie*> zombies) {
 	return nullptr;
 }
 
+Zombie* Explosion::TestIfAllHit(std::vector<Zombie*> zombies, ZombieType zombieType) {
+	for (std::vector<Zombie*>::iterator it = zombies.begin(); it != zombies.end(); it++) {
+		if ((!(*it)->isDamagable() || !RectangleIntersectCircle(
+			(*it)->defAbscissa(),
+			(*it)->defOrdinate(),
+			(*it)->defWidth(),
+			(*it)->defHeight(),
+			abscissa,
+			ordinate,
+			radius)) && (*it)->type == zombieType
+		) {
+			return *it;
+		}
+	}
+	return nullptr;
+}
+
 Zombie* Explosion::TestIfHit(std::vector<Zombie*> zombies) {
 	for (std::vector<Zombie*>::iterator it = zombies.begin(); it != zombies.end(); it++) {
-		if (RectangleIntersectCircle(
+		if ((*it)->isDamagable() && RectangleIntersectCircle(
 			(*it)->defAbscissa(),
 			(*it)->defOrdinate(),
 			(*it)->defWidth(),
@@ -142,7 +159,23 @@ Zombie* Explosion::TestIfHit(std::vector<Zombie*> zombies) {
 		}
 	}
 	return nullptr;
+}
 
+Zombie* Explosion::TestIfHit(std::vector<Zombie*> zombies, ZombieType zombieType) {
+	for (std::vector<Zombie*>::iterator it = zombies.begin(); it != zombies.end(); it++) {
+		if (((*it)->isDamagable() && RectangleIntersectCircle(
+			(*it)->defAbscissa(),
+			(*it)->defOrdinate(),
+			(*it)->defWidth(),
+			(*it)->defHeight(),
+			abscissa,
+			ordinate,
+			radius)) && (*it)->type == zombieType
+		) {
+			return *it;
+		}
+	}
+	return nullptr;
 }
 
 void Explosion::effect() {
@@ -210,7 +243,7 @@ AddBlocker::AddBlocker(int _time, int _row, int _col, bool _setInvincible, Plant
 void AddBlocker::effect() {
 	int plantState = setInvincible ? PLANT_STATE_INVINCIBLE : PLANT_STATE_NORMAL;
 	Plant* blocker = new Plant(plantType, row, col, plantState);
-	game.plantList.push_back(blocker);
+	game.addPlant(blocker);
 }
 
 ShovelBlocker::ShovelBlocker(int _time, int _row, int _col) {

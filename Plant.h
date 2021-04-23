@@ -53,5 +53,6 @@ public:
 	void shovel() { state = PLANT_STATE_SHOVELED; }
 
 	void update();
+	void update(int tick);
 };
 

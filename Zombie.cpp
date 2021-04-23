@@ -243,8 +243,8 @@ void Zombie::update() {
 	if (stateCountDown) { stateCountDown--; }
 }
 
-void Zombie::update(int t) {
-	for (int i = 0; i < t; i++)
+void Zombie::update(int tick) {
+	for (int i = 0; i < tick; i++)
 		update();
 }
 

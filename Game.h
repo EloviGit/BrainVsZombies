@@ -18,6 +18,8 @@ class Game
 	SceneType scene;
 	int randomSeed;
 	bool clownExplode = false;
+	int gameClock;
+	PlantEffect* currentEffect;
 
 public:
 	std::vector<Zombie*> zombieList;
@@ -40,4 +42,15 @@ public:
 	void reportError(std::string info);
 
 	void resetGame(SceneType _scene = SceneType::PE);
+
+	void addZombie(Zombie* zombie);
+	void addZombies(std::vector<Zombie*> zombies);
+	void addPlant(Plant* plant);
+	void addPlants(std::vector<Plant*> plants);
+	void addPlantEffect(PlantEffect* plantEffect);
+	void addPlantEffects(std::vector<PlantEffect*> plantEffects);
+	PlantEffect* popLatestPlantEffect();
+
+	void update();
+	void update(int tick);
 };

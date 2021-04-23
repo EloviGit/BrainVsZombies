@@ -32,7 +32,9 @@ public:
 	Explosion(int _time, ExplosionType _type, int row, float col, int roofPaoCol=-1, int roofPaoRow=-1);
 	void effect();
 	Zombie* TestIfAllHit(std::vector<Zombie*> zombies);
+	Zombie* TestIfAllHit(std::vector<Zombie*> zombies, ZombieType zombieType);
 	Zombie* TestIfHit(std::vector<Zombie*> zombies);
+	Zombie* TestIfHit(std::vector<Zombie*> zombies, ZombieType zombieType);
 };
 
 enum class IceEffectType {
