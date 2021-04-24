@@ -14,6 +14,7 @@ public:
 	EffectType effectType;
 	virtual void effect()=0;
 	bool operator<(const PlantEffect& other);
+	bool operator>(const PlantEffect& other);
 };
 
 enum class ExplosionType {

@@ -8,6 +8,10 @@ bool PlantEffect::operator<(const PlantEffect& other) {
 	return (time < other.time) || (time == other.time && effectType < other.effectType);
 }
 
+bool PlantEffect::operator>(const PlantEffect& other) {
+	return (time > other.time) || (time == other.time && effectType > other.effectType);
+}
+
 Explosion::Explosion(int _time, ExplosionType _type, int row, float col, int roofPaoCol, int roofPaoRow) {
 	time = _time;
 	explosionType = _type;

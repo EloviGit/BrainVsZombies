@@ -3,6 +3,7 @@
 #include "Zombie.h"
 #include "Plant.h"
 #include "PlantEffect.h"
+#include <queue>
 
 enum class SceneType {
 	DE = 0,
@@ -24,7 +25,7 @@ class Game
 public:
 	std::vector<Zombie*> zombieList;
 	std::vector<Plant*> plantList;
-	std::vector<PlantEffect*> plantEffectList;
+	std::priority_queue<PlantEffect*, std::vector<PlantEffect*>, std::greater<PlantEffect*>> plantEffectList;
 
 	Game(SceneType _scene = SceneType::PE, int _randomSeed=0);
 
@@ -38,6 +39,8 @@ public:
 
 	bool getClownExplode() { return clownExplode; }
 	void setClownExplode(bool toExplode);
+
+	int getGameClock() { return gameClock; }
 
 	void reportError(std::string info);
 

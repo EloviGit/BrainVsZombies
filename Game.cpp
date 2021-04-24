@@ -58,13 +58,17 @@ void Game::resetGame(SceneType _scene) {
 		delete (*it);
 	}
 
-	for (std::vector<PlantEffect*>::iterator it = plantEffectList.begin(); it != plantEffectList.end(); it++) {
-		delete (*it);
+	while (!plantEffectList.empty())
+	{
+		PlantEffect* top = plantEffectList.top();
+		delete top;
+		plantEffectList.pop();
 	}
 
 	zombieList.clear();
 	plantList.clear();
-	plantEffectList.clear();
+
+	gameClock = 0;
 }
 
 void Game::addZombie(Zombie* zombie) {
@@ -84,13 +88,15 @@ void Game::addPlants(std::vector<Plant*> plants) {
 }
 
 void Game::addPlantEffect(PlantEffect* plantEffect) {
-	plantEffectList.push_back(plantEffect);
-	sort(plantEffectList.begin(), plantEffectList.end());
+	plantEffectList.push(plantEffect);
 }
 
 void Game::addPlantEffects(std::vector<PlantEffect*> plantEffects) {
-	plantEffectList.insert(plantEffectList.end(), plantEffects.begin(), plantEffects.end());
-	sort(plantEffectList.begin(), plantEffectList.end());
+	std::vector<PlantEffect*>::iterator it = plantEffects.begin();
+	for (; it != plantEffects.end(); it ++)
+	{
+		plantEffectList.push(*it);
+	}
 }
 
 PlantEffect* Game::popLatestPlantEffect() {
@@ -98,14 +104,21 @@ PlantEffect* Game::popLatestPlantEffect() {
 		return nullptr;
 	}
 	else {
-		return *(plantEffectList.erase(plantEffectList.begin()));
+		PlantEffect* top = plantEffectList.top();
+		plantEffectList.pop();
+		return top;
 	}
 }
 
 
 void Game::update() {
+	gameClock++;
+
 	while(currentEffect == nullptr && !plantEffectList.empty()) {
 		currentEffect = popLatestPlantEffect();
+		if (currentEffect == nullptr) {
+			continue;
+		}
 		if (currentEffect->time <= 0) {
 			delete currentEffect;
 			currentEffect = nullptr;
@@ -136,11 +149,9 @@ void Game::update() {
 			break;
 		}
 		currentEffect->effect();
-		delete	currentEffect;
+		delete currentEffect;
 		currentEffect = popLatestPlantEffect();
 	}
-
-	gameClock++;
 }
 
 void Game::update(int tick) {
@@ -175,7 +186,7 @@ Zombie* Game::findFastestZombie(ZombieType _type) {
 		for (std::vector<Zombie*>::iterator it = zombieList.begin(); it < zombieList.end(); it++) {
 			if ((*it)->type == _type) {
 				if (fastest == nullptr) {
-					fastest = *it;
+					fastest = (*it);
 				}
 				else if (fastest->abscissa > (*it)->abscissa) {
 					fastest = (*it);

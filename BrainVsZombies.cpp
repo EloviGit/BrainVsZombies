@@ -4,6 +4,7 @@
 #include "Plant.h"
 #include <fstream>
 #include <sstream>
+#include <Windows.h>
 
 Game game;
 ZombieProperty ZombieProperties[ZOMBIE_TYPE_NUM];
@@ -62,8 +63,8 @@ void getFastChart(int iceTime=0, int endTime=3000) {
     }
     fastfile << std::endl;
 
-    for (int time = 0; time <= endTime; time++) {
-        fastfile << time << ",";
+    while (game.getGameClock() <= endTime) {
+        fastfile << game.getGameClock() << ",";
         for (int i = 0; i < 9; i++)
         {
             ZombieType type = types[i];
@@ -154,9 +155,20 @@ void getSlowChart(int iceTime=0, int endTime=3000) {
 int main()
 {
     initialize();
+    DWORD time0, time1, time2, time3, time4;
+    time0 = GetTickCount64();
     getFastChart(0);
+    time1 = GetTickCount64();
+    std::cout << "stage 1: " << (time1 - time0) << std::endl;
     getFastChart(1);
+    time2 = GetTickCount64();
+    std::cout << "stage 2: " << (time2 - time1) << std::endl;
     getSlowChart(0);
+    time3 = GetTickCount64();
+    std::cout << "stage 3: " << (time3 - time2) << std::endl;
     getSlowChart(1);
+    time4 = GetTickCount64();
+    std::cout << "stage 4: " << (time4 - time3) << std::endl;
 }
 
+ 
