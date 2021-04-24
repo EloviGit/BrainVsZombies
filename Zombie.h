@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <vector>
 #include "Plant.h"
 
 #define DATA_PATH		"data.csv"			// 数据文件路径
@@ -56,7 +57,7 @@
 // 僵尸种类数
 #define ZOMBIE_TYPE_NUM						27	// 共有27种僵尸
 
-#define COL_SPAWN_RANDOM					-1.0f	// 随机生成出生点
+#define ABSC_SPAWN_RANDOM					-300.0f	// 随机生成出生点
 #define RELATIVE_SPEED_RANDOM				-1.0f	// 随机生成相对速度
 
 enum class ZombieType {
@@ -170,7 +171,7 @@ public:
 	int attackType() { return prop->atkType; }
 	int iceType() { return prop->iceType; }
 
-	Zombie(ZombieType _type, int _row=0, float _col=COL_SPAWN_RANDOM, float _relativeSpeed=RELATIVE_SPEED_RANDOM);
+	Zombie(ZombieType _type, int _row=0, float _abscissa=ABSC_SPAWN_RANDOM, float _relativeSpeed=RELATIVE_SPEED_RANDOM);
 	~Zombie(){}
 
 	void update();

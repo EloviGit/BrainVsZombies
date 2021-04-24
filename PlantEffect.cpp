@@ -1,6 +1,6 @@
 #include "PlantEffect.h"
 #include "Game.h"
-#include "judgement.h"
+#include "Judgement.h"
 
 extern Game game;
 
@@ -59,6 +59,7 @@ Explosion::Explosion(int _time, ExplosionType _type, int row, float col, int roo
 				return;
 			}
 
+			h = 0;
 			if (0 <= a && a <= L) {
 				h = 0;
 			}
@@ -112,7 +113,7 @@ Explosion::Explosion(int _time, ExplosionType _type, int row, float col, int roo
 
 Zombie* Explosion::TestIfAllHit(std::vector<Zombie*> zombies) {
 	for (std::vector<Zombie*>::iterator it = zombies.begin(); it != zombies.end(); it++) {
-		if (!(*it)->isDamagable() || !RectangleIntersectCircle(
+		if (!(*it)->isDamagable() || !Judgement::RectangleIntersectCircle(
 			(*it)->defAbscissa(),
 			(*it)->defOrdinate(),
 			(*it)->defWidth(),
@@ -129,7 +130,7 @@ Zombie* Explosion::TestIfAllHit(std::vector<Zombie*> zombies) {
 
 Zombie* Explosion::TestIfAllHit(std::vector<Zombie*> zombies, ZombieType zombieType) {
 	for (std::vector<Zombie*>::iterator it = zombies.begin(); it != zombies.end(); it++) {
-		if ((!(*it)->isDamagable() || !RectangleIntersectCircle(
+		if ((!(*it)->isDamagable() || !Judgement::RectangleIntersectCircle(
 			(*it)->defAbscissa(),
 			(*it)->defOrdinate(),
 			(*it)->defWidth(),
@@ -146,7 +147,7 @@ Zombie* Explosion::TestIfAllHit(std::vector<Zombie*> zombies, ZombieType zombieT
 
 Zombie* Explosion::TestIfHit(std::vector<Zombie*> zombies) {
 	for (std::vector<Zombie*>::iterator it = zombies.begin(); it != zombies.end(); it++) {
-		if ((*it)->isDamagable() && RectangleIntersectCircle(
+		if ((*it)->isDamagable() && Judgement::RectangleIntersectCircle(
 			(*it)->defAbscissa(),
 			(*it)->defOrdinate(),
 			(*it)->defWidth(),
@@ -163,7 +164,7 @@ Zombie* Explosion::TestIfHit(std::vector<Zombie*> zombies) {
 
 Zombie* Explosion::TestIfHit(std::vector<Zombie*> zombies, ZombieType zombieType) {
 	for (std::vector<Zombie*>::iterator it = zombies.begin(); it != zombies.end(); it++) {
-		if (((*it)->isDamagable() && RectangleIntersectCircle(
+		if (((*it)->isDamagable() && Judgement::RectangleIntersectCircle(
 			(*it)->defAbscissa(),
 			(*it)->defOrdinate(),
 			(*it)->defWidth(),
@@ -180,7 +181,7 @@ Zombie* Explosion::TestIfHit(std::vector<Zombie*> zombies, ZombieType zombieType
 
 void Explosion::effect() {
 	for (std::vector<Zombie*>::iterator it = game.zombieList.begin(); it != game.zombieList.end(); it++) {
-		if ((*it)->isDamagable() && RectangleIntersectCircle(
+		if ((*it)->isDamagable() && Judgement::RectangleIntersectCircle(
 			(*it)->defAbscissa(),
 			(*it)->defOrdinate(),
 			(*it)->defWidth(),

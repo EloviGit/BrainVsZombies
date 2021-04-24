@@ -55,4 +55,3 @@ public:
 	void update();
 	void update(int tick);
 };
-

@@ -34,25 +34,25 @@ Plant::Plant(PlantType _type, int _row, int _col, int _state) {
 }
 
 int Plant::ordinate() {
+	int _ordinate = -1;
 	switch (game.getScene())
 	{
 	case SceneType::DE:
 	case SceneType::NE:
-		return 80 + row * 100;
+		_ordinate = 80 + row * 100;
 	case SceneType::PE:
 	case SceneType::FE:
-		return 80 + row * 85;
+		_ordinate = 80 + row * 85;
 	case SceneType::RE:
 	case SceneType::ME:
-		int _ordinate = 70 + row * 85;
+		_ordinate = 70 + row * 85;
 		if (col <= 4) {
 			_ordinate += 20 * col;
 		}
-		return _ordinate;
 	default:
 		break;
 	}
-	return -1;
+	return _ordinate;
 }
 
 void Plant::hit() {

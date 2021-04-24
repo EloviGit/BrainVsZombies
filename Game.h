@@ -53,4 +53,9 @@ public:
 
 	void update();
 	void update(int tick);
+
+	Zombie* findFastestZombie();
+	Zombie* findFastestZombie(ZombieType _type);
+	Zombie* findSlowestZombie();
+	Zombie* findSlowestZombie(ZombieType _type);
 };

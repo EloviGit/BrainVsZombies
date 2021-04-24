@@ -58,6 +58,7 @@ void Zombie::update() {
 			}
 		}
 		else if (movementType() == MOVE_UNEVEN_RELA_SPEED_RANDOM) {
+			// 撑杆橄榄小丑梯子巨人
 			if (!freezeCountdown && !isEating) {
 				if (icedCoutdown) {
 					xspeed = - 0.5 * prop->shift[int(anim_progress * prop->shiftSize)] * replacement;
@@ -187,10 +188,10 @@ void Zombie::update() {
 
 	// 其次更新啃食，碾压，敲击
 	if (state == STATE_WALKING) {
+		bool oldIsEating = isEating, newIsEating = false;
 		switch (attackType())
 		{
 		case ATK_EAT:
-			bool oldIsEating = isEating, newIsEating = false;
 			if (!freezeCountdown && ((icedCoutdown && existTime % 8 == 0) || (!icedCoutdown && existTime % 4 == 0))) {
 				for (std::vector<Plant*>::iterator it = game.plantList.begin(); it != game.plantList.end(); it++) {
 					if (judgeHitPlant(*it) && ((*it)->getState()==PLANT_STATE_NORMAL || (*it)->getState()==PLANT_STATE_INVINCIBLE)) {
@@ -259,6 +260,7 @@ void ReadZombieProperty() {
 	std::getline(infile, line);	// 扔掉第一行
 
 	for (int type = 0; type < ZOMBIE_TYPE_NUM; type++) {
+		std::getline(infile, line);
 		std::istringstream f(line);
 		std::string data = "";
 		std::getline(f, data, ',');
@@ -327,34 +329,23 @@ void ReadZombieProperty() {
 	}
 }
 
-Zombie::Zombie(ZombieType _type, int _row, float _col, float _relativeSpeed) {
+Zombie::Zombie(ZombieType _type, int _row, float _abscissa, float _relativeSpeed) {
 	prop = ZombieProperties + (int)_type;
 	type = _type;
 	state = STATE_WALKING;
 	
 	row = _row;
 
-	if (_col < 0) {
+	if (_abscissa < ABSC_SPAWN_RANDOM + 1) {
 		if (spawnType()) {
 			abscissa = (float)game.getRandomInt(prop->spawnAbscissaLower, prop->spawnAbscissaHigher);
 		}
 		else {
-			if (type == ZombieType::BUNGEE) {
-				abscissa = 40;
-			}
-			else {
-				abscissa = 10;
-			}
+			abscissa = 40;
 		}
 	}
 	else {
-		if (type == ZombieType::BUNGEE)
-		{
-			abscissa = 40 + 80 * _col;
-		}
-		else {
-			abscissa = 10 + 80 * _col;
-		}
+		abscissa = _abscissa;
 	}
 
 	switch (game.getScene())
@@ -420,12 +411,22 @@ Zombie::Zombie(ZombieType _type, int _row, float _col, float _relativeSpeed) {
 		break;
 	case MOVE_EVEN_RELA_SPEED_RANDOM:
 		// 气球 矿工 篮球
-		relativeSpeed = game.getRandomFloat(prop->relativeSpeedLower, prop->relativeSpeedHigher);
+		if (_relativeSpeed < RELATIVE_SPEED_RANDOM + 1) {
+			relativeSpeed = game.getRandomFloat(prop->relativeSpeedLower, prop->relativeSpeedHigher);
+		}
+		else {
+			relativeSpeed = _relativeSpeed;
+		}
 		xspeed = - relativeSpeed;
 		break;
 	case MOVE_UNEVEN_RELA_SPEED_RANDOM:
 		// 撑杆 橄榄 小丑 梯子 巨人
-		relativeSpeed = game.getRandomFloat(prop->relativeSpeedLower, prop->relativeSpeedHigher);
+		if (_relativeSpeed < RELATIVE_SPEED_RANDOM + 1) {
+			relativeSpeed = game.getRandomFloat(prop->relativeSpeedLower, prop->relativeSpeedHigher);
+		}
+		else {
+			relativeSpeed = _relativeSpeed;
+		}
 		progress_delta = relativeSpeed * float(47) * float(0.01) / prop->totalShift;
 		anim_progress = progress_delta;
 		replacement = progress_delta * prop->groundSize;
@@ -443,11 +444,11 @@ Zombie::Zombie(ZombieType _type, int _row, float _col, float _relativeSpeed) {
 }
 
 bool Zombie::judgeHitPlant(Plant* plant) {
-	return IntervalIntersectInterval(atkAbscissa(), atkWidth(), plant->defAbscissa(), plant->defWidth());
+	return Judgement::IntervalIntersectInterval(atkAbscissa(), atkWidth(), plant->defAbscissa(), plant->defWidth());
 }
 
 bool Zombie::judgeClownExplodePlant(Plant* plant) {
-	return RectangleIntersectCircle(plant->clownDefAbscissa(),
+	return Judgement::RectangleIntersectCircle(plant->clownDefAbscissa(),
 		plant->defOrdinate(),
 		plant->clownDefWidth(),
 		plant->defHeight(),
@@ -500,6 +501,8 @@ Zombie* Zombie::throwImp(int _impRnd, bool stackHigher) {
 	if (stackHigher) {
 		imp->update();
 	}
+
+	return imp;
 }
 
 std::vector<Zombie*> Zombie::throwAllImps() {
@@ -523,5 +526,5 @@ std::vector<Zombie*> Zombie::throwAllImps() {
 }
 
 bool Zombie::isDamagable() {
-	return IntervalIntersectInterval(defAbscissa(), defWidth(), -21, 821);
+	return Judgement::IntervalIntersectInterval(defAbscissa(), defWidth(), -21, 821);
 }

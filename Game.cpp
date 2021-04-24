@@ -147,3 +147,79 @@ void Game::update(int tick) {
 	for (int i = 0; i < tick; i++)
 		update();
 }
+
+Zombie* Game::findFastestZombie() {
+	if (zombieList.empty()) {
+		return nullptr;
+	}
+	else if (zombieList.size() == 1) {
+		return *zombieList.begin();
+	}
+	else {
+		Zombie* fastest = *zombieList.begin();
+		for (std::vector<Zombie*>::iterator it = zombieList.begin() + 1; it<zombieList.end(); it++) {
+			if (fastest->abscissa > (*it)->abscissa) {
+				fastest = (*it);
+			}
+		}
+		return fastest;
+	}
+}
+
+Zombie* Game::findFastestZombie(ZombieType _type) {
+	if (zombieList.empty()) {
+		return nullptr;
+	}
+	else {
+		Zombie* fastest = nullptr;
+		for (std::vector<Zombie*>::iterator it = zombieList.begin(); it < zombieList.end(); it++) {
+			if ((*it)->type == _type) {
+				if (fastest == nullptr) {
+					fastest = *it;
+				}
+				else if (fastest->abscissa > (*it)->abscissa) {
+					fastest = (*it);
+				}
+			}
+		}
+		return fastest;
+	}
+}
+
+Zombie* Game::findSlowestZombie() {
+	if (zombieList.empty()) {
+		return nullptr;
+	}
+	else if (zombieList.size() == 1) {
+		return *zombieList.begin();
+	}
+	else {
+		Zombie* slowest = *zombieList.begin();
+		for (std::vector<Zombie*>::iterator it = zombieList.begin() + 1; it < zombieList.end(); it++) {
+			if (slowest->abscissa < (*it)->abscissa) {
+				slowest = (*it);
+			}
+		}
+		return slowest;
+	}
+}
+
+Zombie* Game::findSlowestZombie(ZombieType _type) {
+	if (zombieList.empty()) {
+		return nullptr;
+	}
+	else {
+		Zombie* slowest = nullptr;
+		for (std::vector<Zombie*>::iterator it = zombieList.begin(); it < zombieList.end(); it++) {
+			if ((*it)->type == _type) {
+				if (slowest == nullptr) {
+					slowest = *it;
+				}
+				else if (slowest->abscissa < (*it)->abscissa) {
+					slowest = (*it);
+				}
+			}
+		}
+		return slowest;
+	}
+}

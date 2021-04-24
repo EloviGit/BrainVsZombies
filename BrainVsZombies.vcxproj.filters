@@ -21,13 +21,16 @@
     <ClCompile Include="Zombie.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Game.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="Plant.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="PlantEffect.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Game.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Judgement.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -35,16 +38,16 @@
     <ClInclude Include="Zombie.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="judgement.h">
+    <ClInclude Include="Plant.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="PlantEffect.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Game.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Plant.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="PlantEffect.h">
+    <ClInclude Include="Judgement.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
