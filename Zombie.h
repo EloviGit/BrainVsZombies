@@ -138,7 +138,7 @@ public:
 	int existTime;
 
 	int freezeCountdown;	// 冰冻倒计时
-	int icedCoutdown;		// 减速倒计时
+	int icedCountdown;		// 减速倒计时
 	int stateCountDown;
 
 	bool isEating;

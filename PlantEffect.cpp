@@ -39,7 +39,7 @@ Explosion::Explosion(int _time, ExplosionType _type, int row, float col, int roo
 			}
 
 			if (roofPaoCol == -1) {
-				game.reportError("屋顶场地需指定炮尾所在列。");
+				game.reportError("You need to set the col of the cob cannon");
 				return;
 			}
 
@@ -59,7 +59,7 @@ Explosion::Explosion(int _time, ExplosionType _type, int row, float col, int roo
 				S = 5;
 			}
 			else {
-				game.reportError("不存在九列炮或其他列炮。注意行数是0~8而不是1~9");
+				game.reportError("Note that cols are from 0 through 8.");
 				return;
 			}
 
@@ -78,7 +78,7 @@ Explosion::Explosion(int _time, ExplosionType _type, int row, float col, int roo
 
 			if (a == L) {
 				if (roofPaoRow == -1) {
-					game.reportError("屋顶场地特殊落点，需指定炮所在行。");
+					game.reportError("Special point, you need to set the row of the cob cannon");
 					return;
 				}
 
@@ -216,8 +216,6 @@ void Ice::effect() {
 			continue;
 		}
 
-		(*it)->icedCoutdown = 2000;
-
 		if ((*it)->iceType() == ICE_NOT_FREEZE) {
 			continue;
 		}
@@ -225,14 +223,34 @@ void Ice::effect() {
 		switch (iceEffectType)
 		{
 		case IceEffectType::FAST:
-			(*it)->freezeCountdown = 400;
+			if ((*it)->icedCountdown) {
+				(*it)->freezeCountdown = 300;
+			}
+			else {
+				(*it)->freezeCountdown = 400;
+			}
+			break;
 		case IceEffectType::SLOW:
-			(*it)->freezeCountdown = 600;
+			if ((*it)->icedCountdown) {
+				(*it)->freezeCountdown = 400;
+			}
+			else {
+				(*it)->freezeCountdown = 600;
+			}
+			break;
 		case IceEffectType::RANDOM:
-			(*it)->freezeCountdown = game.getRandomInt(400, 601);
+			if ((*it)->icedCountdown) {
+				(*it)->freezeCountdown = game.getRandomInt(300, 401);
+			}
+			else {
+				(*it)->freezeCountdown = game.getRandomInt(400, 601);
+			}
+			break;
 		default:
 			break;
 		}
+
+		(*it)->icedCountdown = 2000;
 	}
 }
 

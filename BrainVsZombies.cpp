@@ -10,11 +10,13 @@ Game game;
 ZombieProperty ZombieProperties[ZOMBIE_TYPE_NUM];
 
 void initialize() {
+    std::cout << "Initializing..." << std::endl;
     game.setScene(SceneType::PE);
     ReadZombieProperty();
 }
 
 void getFastChart(int iceTime=0, int endTime=3000) {
+    int startRunningTime = GetTickCount64();
     game.resetGame();
     ZombieType types[9] = {
         ZombieType::POLE_VAULTING,
@@ -65,6 +67,10 @@ void getFastChart(int iceTime=0, int endTime=3000) {
 
     while (game.getGameClock() <= endTime) {
         fastfile << game.getGameClock() << ",";
+        if (game.getGameClock() % int(endTime / 10) == 0) {
+            int ratio = game.getGameClock() / int(endTime / 10);
+            std::cout << ratio * 10 << "% completed." << std::endl;
+        }
         for (int i = 0; i < 9; i++)
         {
             ZombieType type = types[i];
@@ -81,9 +87,13 @@ void getFastChart(int iceTime=0, int endTime=3000) {
     }
 
     fastfile.close();
+
+    int endRunningTime = GetTickCount64();
+    std::cout << "Time elapsed: " << (endRunningTime - startRunningTime) << "ms." << std::endl;
 }
 
 void getSlowChart(int iceTime=0, int endTime=3000) {
+    int startRunningTime = GetTickCount64();
     game.resetGame();
     ZombieType types[9] = {
         ZombieType::POLE_VAULTING,
@@ -132,8 +142,14 @@ void getSlowChart(int iceTime=0, int endTime=3000) {
     }
     slowfile << std::endl;
 
-    for (int time = 0; time <= endTime; time++) {
-        slowfile << time << ",";
+    while (game.getGameClock() <= endTime) {
+        slowfile << game.getGameClock() << ",";
+
+        if (game.getGameClock() % int(endTime / 10) == 0) {
+            int ratio = game.getGameClock() / int(endTime / 10);
+            std::cout << ratio * 10 << "% completed." << std::endl;
+        }
+
         for (int i = 0; i < 9; i++)
         {
             ZombieType type = types[i];
@@ -150,25 +166,35 @@ void getSlowChart(int iceTime=0, int endTime=3000) {
     }
 
     slowfile.close();
+
+    int endRunningTime = GetTickCount64();
+    std::cout << "Time elapsed: " << (endRunningTime - startRunningTime) << "ms." << std::endl;
+}
+
+void test() {
+    game.resetGame();
+    Zombie* poleVault = new Zombie(ZombieType::POLE_VAULTING, 0, 870, 0.66);
+    game.addZombie(poleVault);
+    game.addPlantEffect(new Ice(1, IceEffectType::FAST));
+    game.addPlantEffect(new Ice(500, IceEffectType::FAST));
+    game.addPlantEffect(new Ice(1000, IceEffectType::FAST));
+    while (game.getGameClock() <= 2000) {
+        std::cout << game.getGameClock() << ", ";
+        std::cout << poleVault->abscissa << ", " << poleVault->freezeCountdown
+            << ", " << poleVault->icedCountdown << std::endl;
+        game.update();
+    }
 }
 
 int main()
 {
     initialize();
-    DWORD time0, time1, time2, time3, time4;
-    time0 = GetTickCount64();
-    getFastChart(0);
-    time1 = GetTickCount64();
-    std::cout << "stage 1: " << (time1 - time0) << std::endl;
-    getFastChart(1);
-    time2 = GetTickCount64();
-    std::cout << "stage 2: " << (time2 - time1) << std::endl;
-    getSlowChart(0);
-    time3 = GetTickCount64();
-    std::cout << "stage 3: " << (time3 - time2) << std::endl;
-    getSlowChart(1);
-    time4 = GetTickCount64();
-    std::cout << "stage 4: " << (time4 - time3) << std::endl;
+    int simulationTime = 100;
+//    getFastChart(0, simulationTime);
+//    getFastChart(1, simulationTime);
+//    getSlowChart(0, simulationTime);
+//    getSlowChart(1, simulationTime);
+    test();
 }
 
  

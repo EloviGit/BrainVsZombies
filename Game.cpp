@@ -15,7 +15,6 @@ Game::Game(SceneType _scene, int _randomSeed)
 	}
 	srand(randomSeed);
 	gameClock = 0;
-	currentEffect = nullptr;
 }
 
 void Game::resetSeed(int seed) {
@@ -46,7 +45,7 @@ void Game::setClownExplode(bool toExplode) {
 }
 
 void Game::reportError(std::string info) {
-	std::cout << "´íÎó£º\t" << info << std::endl;
+	std::cout << "Error:\t" << info << std::endl;
 }
 
 void Game::resetGame(SceneType _scene) {
@@ -99,40 +98,32 @@ void Game::addPlantEffects(std::vector<PlantEffect*> plantEffects) {
 	}
 }
 
-PlantEffect* Game::popLatestPlantEffect() {
-	if (plantEffectList.empty()) {
-		return nullptr;
-	}
-	else {
+void Game::recycleTopPlantEffect() {
+	if (!plantEffectList.empty()) {
 		PlantEffect* top = plantEffectList.top();
 		plantEffectList.pop();
-		return top;
+		delete top;
 	}
 }
-
 
 void Game::update() {
 	gameClock++;
 
-	while(currentEffect == nullptr && !plantEffectList.empty()) {
-		currentEffect = popLatestPlantEffect();
-		if (currentEffect == nullptr) {
-			continue;
-		}
-		if (currentEffect->time <= 0) {
-			delete currentEffect;
-			currentEffect = nullptr;
-			continue;
-		}
-		if (currentEffect->time <= gameClock) {
-			if (currentEffect->time == gameClock && currentEffect->effectType == EffectType::PLANT_EFFECT) {
-				currentEffect->effect();
+	while(!plantEffectList.empty()) {
+		if (plantEffectList.top()->time < gameClock) {
+			recycleTopPlantEffect();
+		} else if (plantEffectList.top()->time == gameClock) {
+			if (plantEffectList.top()->effectType == EffectType::PLANT_EFFECT) {
+				plantEffectList.top()->effect();
 			}
-			else if (currentEffect->time == gameClock && currentEffect->effectType == EffectType::BULLET_EFFECT) {
+			else {
+				// BULLET_EFFECT
 				break;
 			}
-			delete currentEffect;
-			currentEffect = nullptr;
+			recycleTopPlantEffect();
+		} else {
+			// plantEffectList.top()->time > gameClock
+			break;
 		}
 	}
 
@@ -144,13 +135,12 @@ void Game::update() {
 		(*it)->update();
 	}
 
-	while (currentEffect != nullptr) {
-		if (currentEffect->time > gameClock) {
+	while (!plantEffectList.empty()) {
+		if (plantEffectList.top()->time > gameClock) {
 			break;
 		}
-		currentEffect->effect();
-		delete currentEffect;
-		currentEffect = popLatestPlantEffect();
+		plantEffectList.top()->effect();
+		recycleTopPlantEffect();
 	}
 }
 

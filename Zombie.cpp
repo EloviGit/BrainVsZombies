@@ -30,7 +30,7 @@ void Zombie::update() {
 			case ICE_NORMAL:
 				// 篮球
 				if (!freezeCountdown) {
-					if (icedCoutdown) {
+					if (icedCountdown) {
 						xspeed = -0.4 * relativeSpeed;
 					}
 					else {
@@ -41,7 +41,7 @@ void Zombie::update() {
 				break;
 			case ICE_NOT_FREEZE:
 				// 气球
-				if (icedCoutdown) {
+				if (icedCountdown) {
 					xspeed = -0.4 * relativeSpeed;
 				}
 				else {
@@ -61,7 +61,7 @@ void Zombie::update() {
 		else if (movementType() == MOVE_UNEVEN_RELA_SPEED_RANDOM) {
 			// 撑杆橄榄小丑梯子巨人
 			if (!freezeCountdown && !isEating) {
-				if (icedCoutdown) {
+				if (icedCountdown) {
 					xspeed = - 0.5 * prop->shift[int(anim_progress * prop->shiftSize)] * replacement;
 					anim_progress += 0.5 * progress_delta;
 					if (anim_progress >= 1) {
@@ -117,7 +117,7 @@ void Zombie::update() {
 	{
 		// 小鬼的落地过程实际由动画进度完成，但我并不清楚细节
 		// 暂时仅用减速50cs，原速25cs代替，可能造成1cs的误差
-		if (icedCoutdown) {
+		if (icedCountdown) {
 			stateCountDown -= 1;
 		}
 		else {
@@ -132,7 +132,7 @@ void Zombie::update() {
 		// 暂时仅用减速416cs，原速208cs代替，可能造成1cs的误差
 		if (!freezeCountdown) {
 			int lastStateCountDown = stateCountDown;
-			if (icedCoutdown) {
+			if (icedCountdown) {
 				stateCountDown -= 1;
 			}
 			else {
@@ -151,7 +151,7 @@ void Zombie::update() {
 
 			if (stateCountDown <= 0) {
 				state = STATE_WALKING;
-				if (icedCoutdown) {
+				if (icedCountdown) {
 					anim_progress = 0.5 * progress_delta;
 				}
 				else {
@@ -167,7 +167,7 @@ void Zombie::update() {
 		// 并不真正地生成小鬼，想要知道小鬼需要使用其他函数
 		if (!freezeCountdown) {
 			int lastStateCountDown = stateCountDown;
-			if (icedCoutdown) {
+			if (icedCountdown) {
 				stateCountDown -= 1;
 			}
 			else {
@@ -176,7 +176,7 @@ void Zombie::update() {
 
 			if (stateCountDown <= 0) {
 				state = STATE_WALKING;
-				if (icedCoutdown) {
+				if (icedCountdown) {
 					anim_progress = 0.5 * progress_delta;
 				}
 				else {
@@ -193,7 +193,7 @@ void Zombie::update() {
 		switch (attackType())
 		{
 		case ATK_EAT:
-			if (!freezeCountdown && ((icedCoutdown && existTime % 8 == 0) || (!icedCoutdown && existTime % 4 == 0))) {
+			if (!freezeCountdown && ((icedCountdown && existTime % 8 == 0) || (!icedCountdown && existTime % 4 == 0))) {
 				for (std::vector<Plant*>::iterator it = game.plantList.begin(); it != game.plantList.end(); it++) {
 					if (judgeHitPlant(*it) && ((*it)->getState()==PLANT_STATE_NORMAL || (*it)->getState()==PLANT_STATE_INVINCIBLE)) {
 						if (!freezeCountdown) {
@@ -208,7 +208,7 @@ void Zombie::update() {
 			if (oldIsEating && !newIsEating) {
 				// 啃食结束
 				isEating = false;
-				if (icedCoutdown) {
+				if (icedCountdown) {
 					anim_progress = 0.5 * progress_delta;
 				}
 				else {
@@ -241,7 +241,7 @@ void Zombie::update() {
 	// 其次更新状态倒计时
 	existTime++;
 	if (freezeCountdown) { freezeCountdown--; }
-	if (icedCoutdown) { icedCoutdown--; }
+	if (icedCountdown) { icedCountdown--; }
 	if (stateCountDown) { stateCountDown--; }
 }
 
@@ -386,7 +386,7 @@ Zombie::Zombie(ZombieType _type, int _row, float _abscissa, float _relativeSpeed
 
 	existTime = 0;
 	freezeCountdown = 0;
-	icedCoutdown = 0;
+	icedCountdown = 0;
 	stateCountDown = 0;
 	if (type == ZombieType::JACK_IN_THE_BOX) {
 		int earlyExplode = game.getRandomInt(0, 20);

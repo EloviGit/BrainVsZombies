@@ -20,7 +20,6 @@ class Game
 	int randomSeed;
 	bool clownExplode = false;
 	int gameClock;
-	PlantEffect* currentEffect;
 
 public:
 	std::vector<Zombie*> zombieList;
@@ -52,7 +51,7 @@ public:
 	void addPlants(std::vector<Plant*> plants);
 	void addPlantEffect(PlantEffect* plantEffect);
 	void addPlantEffects(std::vector<PlantEffect*> plantEffects);
-	PlantEffect* popLatestPlantEffect();
+	void recycleTopPlantEffect();
 
 	void update();
 	void update(int tick);
