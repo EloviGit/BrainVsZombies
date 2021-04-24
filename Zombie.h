@@ -191,4 +191,6 @@ public:
 	bool isDamaged() { return damage; }
 
 	void kill();
+
+	bool hasEnteredHome();
 };

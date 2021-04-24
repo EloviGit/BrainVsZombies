@@ -11,6 +11,7 @@ extern Game game;
 
 void Zombie::update() {
 	if (state == STATE_DEAD) { return; }
+	if (hasEnteredHome()) { return; }
 
 	if (game.getScene() == SceneType::RE || game.getScene() == SceneType::ME) {
 		if (int(abscissa) <= 400) {
@@ -527,4 +528,8 @@ std::vector<Zombie*> Zombie::throwAllImps() {
 
 bool Zombie::isDamagable() {
 	return Judgement::IntervalIntersectInterval(defAbscissa(), defWidth(), -21, 821);
+}
+
+bool Zombie::hasEnteredHome() {
+	return (defAbscissa() + defWidth()) < -21;
 }
