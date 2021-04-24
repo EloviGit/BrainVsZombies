@@ -189,12 +189,12 @@ void test() {
 int main()
 {
     initialize();
-    int simulationTime = 100;
-//    getFastChart(0, simulationTime);
-//    getFastChart(1, simulationTime);
-//    getSlowChart(0, simulationTime);
-//    getSlowChart(1, simulationTime);
-    test();
+    int simulationTime = 3000;
+    getFastChart(0, simulationTime);
+    getFastChart(1, simulationTime);
+    getSlowChart(0, simulationTime);
+    getSlowChart(1, simulationTime);
+//    test();
 }
 
  
