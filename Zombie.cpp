@@ -192,12 +192,13 @@ void Zombie::update() {
 			case ATK_EAT:
 				if (!freezeCountdown && ((icedCountdown && existTime % 8 == 0) || (!icedCountdown && existTime % 4 == 0))) {
 					for (std::vector<Plant*>::iterator it = game.plantList.begin(); it != game.plantList.end(); it++) {
-						if (judgeHitPlant(*it) && ((*it)->getState() == PLANT_STATE_NORMAL || (*it)->getState() == PLANT_STATE_INVINCIBLE)) {
+						if (judgeHitPlant(*it)) {
 							if (!freezeCountdown) {
 								(*it)->hit();
 							}
 							newIsEating = true;
 							isEating = true;
+							break;
 						}
 					}
 
@@ -228,7 +229,7 @@ void Zombie::update() {
 				break;
 			case ATK_HAMMER:
 				for (std::vector<Plant*>::iterator it = game.plantList.begin(); it != game.plantList.end(); it++) {
-					if (judgeHitPlant(*it) && ((*it)->getState() == PLANT_STATE_NORMAL || (*it)->getState() == PLANT_STATE_INVINCIBLE)) {
+					if (judgeHitPlant(*it)) {
 						state = STATE_HAMMERING;
 						stateCountDown = 416;
 						break;
@@ -244,8 +245,8 @@ void Zombie::update() {
 		if (stateCountDown == 0) {
 			// 爆炸生效，清除爆炸范围内所有植物与小丑
 			for (std::vector<Plant*>::iterator it = game.plantList.begin(); it != game.plantList.end(); it++) {
-				if (judgeClownExplodePlant(*it) && !(*it)->isDisappeard()) {
-					(*it)->explode();
+				if (judgeClownExplodePlant(*it) && !(*it)->isDisappeared()) {
+					(*it)->explode(id);
 				}
 			}
 			kill();
@@ -264,7 +265,7 @@ void Zombie::update() {
 	// 输出
 	if (game.debug()) {
 		std::stringstream ss;
-		ss << game.getGameClock() << ",Zombie" << id << "," << existTime << "," << row <<
+		ss << game.getGameClock() << ",Zombie," << id << "," << existTime << "," << row <<
 			",-1," << abscissa << "," << ordinate << "," << state << "," << isEating << ","
 			<< stateCountDown << "," << freezeCountdown << "," << icedCountdown << ",\n";
 		game.log(ss.str());
@@ -472,11 +473,11 @@ Zombie::Zombie(ZombieType _type, int _row, float _abscissa, float _relativeSpeed
 }
 
 bool Zombie::judgeHitPlant(Plant* plant) {
-	return Judgement::IntervalIntersectInterval(atkAbscissa(), atkWidth(), plant->defAbscissa(), plant->defWidth());
+	return !isDisappeared() && !plant->isDisappeared() && row == plant->row && Judgement::IntervalIntersectInterval(atkAbscissa(), atkWidth(), plant->defAbscissa(), plant->defWidth());
 }
 
 bool Zombie::judgeClownExplodePlant(Plant* plant) {
-	return Judgement::RectangleIntersectCircle(plant->clownDefAbscissa(),
+	return !isDisappeared() && !plant->isDisappeared() && Judgement::RectangleIntersectCircle(plant->clownDefAbscissa(),
 		plant->defOrdinate(),
 		plant->clownDefWidth(),
 		plant->defHeight(),
@@ -558,4 +559,8 @@ bool Zombie::isDamagable() {
 
 bool Zombie::hasEnteredHome() {
 	return (defAbscissa() + defWidth()) < -21;
+}
+
+bool Zombie::isDisappeared() {
+	return state == STATE_DEAD;
 }

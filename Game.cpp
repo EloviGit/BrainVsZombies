@@ -20,7 +20,9 @@ Game::Game(SceneType _scene, int _randomSeed) {
 }
 
 Game::~Game() {
-	if (debugMode) logFile.close();
+	if (debugMode != DebugMode::OFF) {
+		logFile.close();
+	}
 }
 
 void Game::resetSeed(int seed) {
@@ -231,6 +233,17 @@ Zombie* Game::findSlowestZombie(ZombieType _type) {
 	}
 }
 
+Zombie* Game::findZombieById(int _id) {
+	if (!zombieList.empty()) {
+		for (std::vector<Zombie*>::iterator it = zombieList.begin(); it < zombieList.end(); it++) {
+			if ((*it)->id == _id) {
+				return (*it);
+			}
+		}
+	}
+	return nullptr;
+}
+
 std::string Game::getTimestamp() {
 	auto t = std::time(nullptr);
 	struct tm buf;
@@ -241,13 +254,15 @@ std::string Game::getTimestamp() {
 }
 
 void Game::setDebug(bool _debug) {
-	if (_debug == debugMode) return;
-	debugMode = _debug;
-	if (debugMode) {
-		logFile.open(logFilename, std::ios::out | std::ios::trunc);
-		logFile << "clock,name,existTime,row,col,absc,ord,state,eat,stateCd,frzCd,icedCd,\n";
+	if (_debug) {
+		if (debugMode == DebugMode::OFF) {
+			logFile.open(logFilename, std::ios::out | std::ios::trunc);
+			logFile << "clock,category,id,exist_time/type,row,col,absc,ord,state,eat/dmg,state_countdown,freeze_countdown,iced_countdown,\n";
+			debugMode = DebugMode::ACTIVE;
+		}
+		else if (debugMode == DebugMode::INACTIVE) debugMode = DebugMode::ACTIVE;
 	}
 	else {
-		logFile.close();
+		if (debugMode == DebugMode::ACTIVE) debugMode = DebugMode::INACTIVE;
 	}
 }

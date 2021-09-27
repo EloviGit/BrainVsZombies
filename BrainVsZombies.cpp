@@ -183,51 +183,41 @@ void test() {
 }
 
 // 测试小丑在指定时间段内的炸炮数
-void testJackTime(int sample_size, size_t start_tick, size_t end_tick, int dc_time = -1, bool debug = false) {
+void testJackTime(int sample_size, size_t start_tick, size_t end_tick, int ice_time = 1, int dc_time = -1, bool debug = false) {
 	int startRunningTime = GetTickCount64();
 	const int ZOM_NUM = 5;
-	const int TOTAL_ZOM_TYPE = 2;
-	ZombieType types[TOTAL_ZOM_TYPE] = {
-		ZombieType::JACK_IN_THE_BOX,
-		ZombieType::LADDER,
-	};
-	const int TOTAL_COB_ROW = 4;
-	int cob_rows[TOTAL_COB_ROW] = { 0, 1, 4, 5 };
-	const int TOTAL_ZOM_ROW = 4;
-	int zom_rows[TOTAL_ZOM_ROW] = { 0, 1, 4, 5 };
-	std::vector<int> counter, hp_counter;
-	for (int i = 0; i < end_tick - start_tick; i++) {
-		counter.push_back(0);
-		hp_counter.push_back(0);
-	}
+	std::vector<ZombieType> types{ ZombieType::JACK_IN_THE_BOX, ZombieType::LADDER, };
+	std::vector<int> cob_rows{ 0, 1, 4, 5 };
+	std::vector<int> zom_rows{ 0, 1, 4, 5 };
+	std::vector<int> loss_counter(end_tick - start_tick), hp_counter(end_tick - start_tick);
+	std::vector<std::vector<int>> explodeInfo(cob_rows.size(), std::vector<int>(zom_rows.size()));
 
 	std::stringstream filename;
 	std::ofstream file;
-	filename << "output/jack_time(" + game.getTimestamp() + ").csv";
+	filename << "output/" << ice_time << "冰 " << dc_time << "垫 n=" << sample_size << ".csv";
 	file.open(filename.str(), std::ios::out | std::ios::trunc);
-	file << "time,hp_loss,num,avg_loss\n";
 
+	if (debug) game.setClownEarlyExplode(1);
 	game.setDebug(debug);
 	int divide = sample_size / 10 == 0 ? 1 : sample_size / 10;
 	for (int l = 0; l < sample_size; l++) {
 		game.resetGame();
 
 		// 创建植物
-		for (int i = 0; i < TOTAL_COB_ROW; i++) {
+		for (int i = 0; i < cob_rows.size(); i++) {
 			game.addPlant(new Plant(PlantType::COB_CANNON, cob_rows[i], 6, PLANT_STATE_INVINCIBLE));
 		}
 
 		// 创建僵尸
-		for (int i = 0; i < TOTAL_ZOM_TYPE; i++) {
+		for (int i = 0; i < types.size(); i++) {
 			ZombieType type = types[i];
 			ZombieProperty* prop = ZombieProperties + int(type);
 			for (int j = 0; j < ZOM_NUM; j++) {
-				game.addZombie(new Zombie(type, zom_rows[game.getRandomInt(0, TOTAL_ZOM_ROW)],
-					ABSC_SPAWN_RANDOM, RELATIVE_SPEED_RANDOM));
+				game.addZombie(new Zombie(type, zom_rows[game.getRandomInt(0, zom_rows.size())]));
 			}
 		}
 
-		game.addPlantEffect(new Ice(1, IceEffectType::RANDOM));
+		game.addPlantEffect(new Ice(ice_time, IceEffectType::RANDOM));
 
 		// 测试
 		if (dc_time == -1) {
@@ -235,7 +225,7 @@ void testJackTime(int sample_size, size_t start_tick, size_t end_tick, int dc_ti
 		}
 		else {
 			game.update(dc_time);
-			for (int i = 0; i < TOTAL_COB_ROW; i++) {
+			for (int i = 0; i < cob_rows.size(); i++) {
 				game.addPlant(new Plant(PlantType::NORMAL, cob_rows[i], 8, PLANT_STATE_INVINCIBLE));
 			}
 			game.update(266);
@@ -252,13 +242,26 @@ void testJackTime(int sample_size, size_t start_tick, size_t end_tick, int dc_ti
 			int hp_loss = 0;
 			for (std::vector<Plant*>::iterator it = game.plantList.begin(); it != game.plantList.end(); it++) {
 				if ((*it)->getType() == PlantType::COB_CANNON) {
-					if ((*it)->isDisappeard()) sum++;
+					if ((*it)->isDisappeared()) sum++;
 					else hp_loss += (*it)->getDamage();
 				}
 			}
-			counter[t] += sum;
+			loss_counter[t] += sum;
 			hp_counter[t] += hp_loss;
 			game.update();
+		}
+
+		// 记录爆炸信息
+		for (std::vector<Plant*>::iterator it = game.plantList.begin(); it != game.plantList.end(); it++) {
+			if ((*it)->getType() == PlantType::COB_CANNON && (*it)->getState() == PLANT_STATE_EXPLODED) {
+				auto cob_index = std::find(cob_rows.begin(), cob_rows.end(), (*it)->row);
+				if (cob_index == cob_rows.end()) continue;
+				Zombie* zom = game.findZombieById((*it)->getExplodeID());
+				if (zom == nullptr) continue;
+				auto zom_index = std::find(zom_rows.begin(), zom_rows.end(), zom->row);
+				if (zom_index == zom_rows.end()) continue;
+				explodeInfo[cob_index - cob_rows.begin()][zom_index - zom_rows.begin()]++;
+			}
 		}
 
 		if (l % divide == 0) {
@@ -267,9 +270,18 @@ void testJackTime(int sample_size, size_t start_tick, size_t end_tick, int dc_ti
 	}
 
 	// 输出
+	file << ",";
+	for (auto r : zom_rows) file << r << ",";
+	file << "\n";
+	for (int i = 0; i < cob_rows.size(); i++) {
+		file << cob_rows[i] << ",";
+		for (auto r : explodeInfo[i]) file << r << ",";
+		file << "\n";
+	}
+	file << "time,cob_loss,hp_loss,num,avg_loss\n";
 	for (int i = 0; i < end_tick - start_tick; i++) {
-		file << start_tick + i << "," << counter[i] << "," << hp_counter[i]
-			<< "," << sample_size * TOTAL_COB_ROW - counter[i] << "," << double(hp_counter[i]) / (sample_size * TOTAL_COB_ROW - counter[i]) << ",\n";
+		file << start_tick + i << "," << loss_counter[i] << "," << hp_counter[i]
+			<< "," << sample_size * cob_rows.size() - loss_counter[i] << "," << double(hp_counter[i]) / (sample_size * cob_rows.size() - loss_counter[i]) << ",\n";
 	}
 	file.close();
 	int endRunningTime = GetTickCount64();
@@ -278,14 +290,17 @@ void testJackTime(int sample_size, size_t start_tick, size_t end_tick, int dc_ti
 
 int main() {
 	initialize();
-	//int simulationTime = 3000;
+	int simulationTime = 3000;
 	//getFastChart(0, simulationTime);
 	//getFastChart(1, simulationTime);
 	//getSlowChart(0, simulationTime);
 	//getSlowChart(1, simulationTime);
+	//getFastChart(11, simulationTime);
 //    test();
 
-	testJackTime(10000, 1200, 1465, 824, false);
+	testJackTime(10000, 1200, 1500, 1, 770, false);
+	testJackTime(10000, 1200, 1500, 1, 824, false);
+
 	system("pause");
 }
 

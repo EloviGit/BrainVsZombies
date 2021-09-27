@@ -5,6 +5,7 @@
 #include "PlantEffect.h"
 #include <queue>
 #include <fstream>
+#include <cassert>
 
 enum class SceneType {
 	DE = 0,
@@ -15,16 +16,23 @@ enum class SceneType {
 	ME = 5,
 };
 
+enum class DebugMode {
+	OFF = 0,
+	INACTIVE,
+	ACTIVE,
+};
+
 class Game {
 	SceneType scene;
 	int randomSeed;
 	bool clownExplode = false;
 	bool clownEarlyExplode = false;
 	int gameClock;
-	bool debugMode = false;
+	int zombieID = 0;
+	int plantID = 0;
+	DebugMode debugMode = DebugMode::OFF;
 	std::string logFilename = "output/log.csv";
 	std::ofstream logFile;
-	int zombieID = 0;
 
 public:
 	std::vector<Zombie*> zombieList;
@@ -46,12 +54,13 @@ public:
 	void setClownExplode(bool toExplode);
 	bool getClownEarlyExplode() { return clownEarlyExplode; }
 	void setClownEarlyExplode(bool toExplode) { clownEarlyExplode = toExplode; }
-	bool debug() { return debugMode; }
+	bool debug() { return debugMode == DebugMode::ACTIVE; }
 	void setDebug(bool debug);
-	void log(std::string line) { logFile << line; }
+	void log(std::string line) { assert(debugMode == DebugMode::ACTIVE); logFile << line; }
 
 	int getGameClock() { return gameClock; }
 	int getZombieID() { return zombieID++; }
+	int getPlantID() { return plantID++; }
 
 	void reportError(std::string info);
 
@@ -72,6 +81,7 @@ public:
 	Zombie* findFastestZombie(ZombieType _type);
 	Zombie* findSlowestZombie();
 	Zombie* findSlowestZombie(ZombieType _type);
+	Zombie* findZombieById(int id);
 
 	std::string getTimestamp();
 };

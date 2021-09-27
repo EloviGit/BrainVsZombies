@@ -169,6 +169,7 @@ public:
 	int spawnType() { return prop->spawnType; }
 	int attackType() { return prop->atkType; }
 	int iceType() { return prop->iceType; }
+	bool isDisappeared();
 
 	Zombie(ZombieType _type, int _row = 0, float _abscissa = ABSC_SPAWN_RANDOM, float _relativeSpeed = RELATIVE_SPEED_RANDOM);
 	~Zombie() {}
