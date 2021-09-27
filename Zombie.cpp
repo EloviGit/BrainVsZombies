@@ -25,11 +25,21 @@ void Zombie::update() {
 	// 首先更新运动
 	if (state == STATE_WALKING) {
 		if (movementType() == MOVE_EVEN_RELA_SPEED_RANDOM) {
-			switch (iceType())
-			{
-			case ICE_NORMAL:
-				// 篮球
-				if (!freezeCountdown) {
+			switch (iceType()) {
+				case ICE_NORMAL:
+					// 篮球
+					if (!freezeCountdown) {
+						if (icedCountdown) {
+							xspeed = -0.4 * relativeSpeed;
+						}
+						else {
+							xspeed = -relativeSpeed;
+						}
+						abscissa += xspeed;
+					}
+					break;
+				case ICE_NOT_FREEZE:
+					// 气球
 					if (icedCountdown) {
 						xspeed = -0.4 * relativeSpeed;
 					}
@@ -37,39 +47,28 @@ void Zombie::update() {
 						xspeed = -relativeSpeed;
 					}
 					abscissa += xspeed;
-				}
-				break;
-			case ICE_NOT_FREEZE:
-				// 气球
-				if (icedCountdown) {
-					xspeed = -0.4 * relativeSpeed;
-				}
-				else {
+					break;
+				case ICE_NONE:
+					// 矿工
 					xspeed = -relativeSpeed;
-				}
-				abscissa += xspeed;
-				break;
-			case ICE_NONE:
-				// 矿工
-				xspeed = -relativeSpeed;
-				abscissa += xspeed;
-				break;
-			default:
-				break;
+					abscissa += xspeed;
+					break;
+				default:
+					break;
 			}
 		}
 		else if (movementType() == MOVE_UNEVEN_RELA_SPEED_RANDOM) {
 			// 撑杆橄榄小丑梯子巨人
 			if (!freezeCountdown && !isEating) {
 				if (icedCountdown) {
-					xspeed = - 0.5 * prop->shift[int(anim_progress * prop->shiftSize)] * replacement;
+					xspeed = -0.5 * prop->shift[int(anim_progress * prop->shiftSize)] * replacement;
 					anim_progress += 0.5 * progress_delta;
 					if (anim_progress >= 1) {
 						anim_progress -= 1;
 					}
 				}
 				else {
-					xspeed = - prop->shift[int(anim_progress * prop->shiftSize)] * replacement;
+					xspeed = -prop->shift[int(anim_progress * prop->shiftSize)] * replacement;
 					anim_progress += progress_delta;
 					if (anim_progress >= 1) {
 						anim_progress -= 1;
@@ -98,8 +97,7 @@ void Zombie::update() {
 		abscissa += xspeed;
 		height += hspeed;
 		if (game.getScene() == SceneType::RE || game.getScene() == SceneType::ME) {
-			if (int(height + roofHeight) < 0)
-			{
+			if (int(height + roofHeight) < 0) {
 				state = STATE_IMP_LANDING;
 				height = 0;
 				stateCountDown = 50;
@@ -113,8 +111,7 @@ void Zombie::update() {
 			}
 		}
 	}
-	else if (state == STATE_IMP_LANDING)
-	{
+	else if (state == STATE_IMP_LANDING) {
 		// 小鬼的落地过程实际由动画进度完成，但我并不清楚细节
 		// 暂时仅用减速50cs，原速25cs代替，可能造成1cs的误差
 		if (icedCountdown) {
@@ -188,61 +185,91 @@ void Zombie::update() {
 
 
 	// 其次更新啃食，碾压，敲击
+	// 更新小丑开盒
 	if (state == STATE_WALKING) {
 		bool oldIsEating = isEating, newIsEating = false;
-		switch (attackType())
-		{
-		case ATK_EAT:
-			if (!freezeCountdown && ((icedCountdown && existTime % 8 == 0) || (!icedCountdown && existTime % 4 == 0))) {
-				for (std::vector<Plant*>::iterator it = game.plantList.begin(); it != game.plantList.end(); it++) {
-					if (judgeHitPlant(*it) && ((*it)->getState()==PLANT_STATE_NORMAL || (*it)->getState()==PLANT_STATE_INVINCIBLE)) {
-						if (!freezeCountdown) {
-							(*it)->hit();
+		switch (attackType()) {
+			case ATK_EAT:
+				if (!freezeCountdown && ((icedCountdown && existTime % 8 == 0) || (!icedCountdown && existTime % 4 == 0))) {
+					for (std::vector<Plant*>::iterator it = game.plantList.begin(); it != game.plantList.end(); it++) {
+						if (judgeHitPlant(*it) && ((*it)->getState() == PLANT_STATE_NORMAL || (*it)->getState() == PLANT_STATE_INVINCIBLE)) {
+							if (!freezeCountdown) {
+								(*it)->hit();
+							}
+							newIsEating = true;
+							isEating = true;
 						}
-						newIsEating = true;
-						isEating = true;
 					}
-					break;
+
+					if (oldIsEating && !newIsEating) {
+						// 啃食结束
+						isEating = false;
+						if (icedCountdown) {
+							anim_progress = 0.5 * progress_delta;
+						}
+						else {
+							anim_progress = progress_delta;
+						}
+					}
 				}
-			}
-			if (oldIsEating && !newIsEating) {
-				// 啃食结束
-				isEating = false;
-				if (icedCountdown) {
-					anim_progress = 0.5 * progress_delta;
+
+				// 更新小丑开盒
+				if (!freezeCountdown && type == ZombieType::JACK_IN_THE_BOX && stateCountDown == 0) {
+					state = STATE_CLOWN_EXPLODE;
+					stateCountDown = 110;
 				}
-				else {
-					anim_progress = progress_delta;
+				break;
+			case ATK_CRUSH:
+				for (std::vector<Plant*>::iterator it = game.plantList.begin(); it != game.plantList.end(); it++) {
+					if (judgeHitPlant(*it)) {
+						(*it)->crush();
+					}
 				}
-			}
-			break;
-		case ATK_CRUSH:
+				break;
+			case ATK_HAMMER:
+				for (std::vector<Plant*>::iterator it = game.plantList.begin(); it != game.plantList.end(); it++) {
+					if (judgeHitPlant(*it) && ((*it)->getState() == PLANT_STATE_NORMAL || (*it)->getState() == PLANT_STATE_INVINCIBLE)) {
+						state = STATE_HAMMERING;
+						stateCountDown = 416;
+						break;
+					}
+				}
+				break;
+			default:
+				// 暂不支持撑杆跳跃和舞王召唤
+				break;
+		}
+	}
+	else if (state == STATE_CLOWN_EXPLODE) {
+		if (stateCountDown == 0) {
+			// 爆炸生效，清除爆炸范围内所有植物与小丑
 			for (std::vector<Plant*>::iterator it = game.plantList.begin(); it != game.plantList.end(); it++) {
-				if (judgeHitPlant(*it)) {
-					(*it)->crush();
+				if (judgeClownExplodePlant(*it) && !(*it)->isDisappeard()) {
+					(*it)->explode();
 				}
 			}
-			break;
-		case ATK_HAMMER:
-			for (std::vector<Plant*>::iterator it = game.plantList.begin(); it != game.plantList.end(); it++) {
-				if (judgeHitPlant(*it) && ((*it)->getState()==PLANT_STATE_NORMAL || (*it)->getState()==PLANT_STATE_INVINCIBLE)) {
-					state = STATE_HAMMERING;
-					stateCountDown = 416;
-					break;
-				}
-			}
-			break;
-		default:
-			// 暂不支持撑杆跳跃和舞王召唤
-			break;
+			kill();
 		}
 	}
 
 	// 其次更新状态倒计时
 	existTime++;
 	if (freezeCountdown) { freezeCountdown--; }
+	if (stateCountDown && !(type == ZombieType::JACK_IN_THE_BOX
+		&& freezeCountdown && state != STATE_CLOWN_EXPLODE)) {
+		stateCountDown--;
+	}
 	if (icedCountdown) { icedCountdown--; }
-	if (stateCountDown) { stateCountDown--; }
+
+	// 输出
+	if (game.debug()) {
+		std::stringstream ss;
+		ss << game.getGameClock() << ",Zombie" << id << "," << existTime << "," << row <<
+			",-1," << abscissa << "," << ordinate << "," << state << "," << isEating << ","
+			<< stateCountDown << "," << freezeCountdown << "," << icedCountdown << ",\n";
+		game.log(ss.str());
+	}
+
 }
 
 void Zombie::update(int tick) {
@@ -334,7 +361,8 @@ Zombie::Zombie(ZombieType _type, int _row, float _abscissa, float _relativeSpeed
 	prop = ZombieProperties + (int)_type;
 	type = _type;
 	state = STATE_WALKING;
-	
+	id = game.getZombieID();
+
 	row = _row;
 
 	if (_abscissa < ABSC_SPAWN_RANDOM + 1) {
@@ -349,27 +377,26 @@ Zombie::Zombie(ZombieType _type, int _row, float _abscissa, float _relativeSpeed
 		abscissa = _abscissa;
 	}
 
-	switch (game.getScene())
-	{
-	case SceneType::DE:
-	case SceneType::NE:
-		ordinate = 50 + row * 100;
-		roofHeight = 0;
-		break;
-	case SceneType::PE:
-	case SceneType::FE:
-		ordinate = 50 + row * 85;
-		roofHeight = 0;
-		break;
-	case SceneType::RE:
-	case SceneType::ME:
-		ordinate = 40 + row * 85;
-		if (int(abscissa) <= 400) {
-			roofHeight = (400 - int(abscissa)) / 4.0;
-		}
-		break;
-	default:
-		break;
+	switch (game.getScene()) {
+		case SceneType::DE:
+		case SceneType::NE:
+			ordinate = 50 + row * 100;
+			roofHeight = 0;
+			break;
+		case SceneType::PE:
+		case SceneType::FE:
+			ordinate = 50 + row * 85;
+			roofHeight = 0;
+			break;
+		case SceneType::RE:
+		case SceneType::ME:
+			ordinate = 40 + row * 85;
+			if (int(abscissa) <= 400) {
+				roofHeight = (400 - int(abscissa)) / 4.0;
+			}
+			break;
+		default:
+			break;
 	}
 
 	if (type == ZombieType::BALLON) {
@@ -388,59 +415,59 @@ Zombie::Zombie(ZombieType _type, int _row, float _abscissa, float _relativeSpeed
 	freezeCountdown = 0;
 	icedCountdown = 0;
 	stateCountDown = 0;
+	isEating = false;
+	damage = 0;
+
+	switch (movementType()) {
+		case MOVE_UNKNOWN:
+		case MOVE_EVEN_RELA_SPEED_FIXED:
+		case MOVE_UNEVEN_RELA_SPEED_FIXED:
+			relativeSpeed = 0;
+			// 目前不支持
+			break;
+		case MOVE_EVEN_RELA_SPEED_RANDOM:
+			// 气球 矿工 篮球
+			if (_relativeSpeed < RELATIVE_SPEED_RANDOM + 1) {
+				relativeSpeed = game.getRandomFloat(prop->relativeSpeedLower, prop->relativeSpeedHigher);
+			}
+			else {
+				relativeSpeed = _relativeSpeed;
+			}
+			xspeed = -relativeSpeed;
+			break;
+		case MOVE_UNEVEN_RELA_SPEED_RANDOM:
+			// 撑杆 橄榄 小丑 梯子 巨人
+			if (_relativeSpeed < RELATIVE_SPEED_RANDOM + 1) {
+				relativeSpeed = game.getRandomFloat(prop->relativeSpeedLower, prop->relativeSpeedHigher);
+			}
+			else {
+				relativeSpeed = _relativeSpeed;
+			}
+			progress_delta = relativeSpeed * float(47) * float(0.01) / prop->totalShift;
+			anim_progress = progress_delta;
+			replacement = progress_delta * prop->groundSize;
+			xspeed = -prop->shift[int(anim_progress * prop->shiftSize)] * replacement;
+			break;
+		case MOVE_IMP:
+			// 小鬼
+			break;
+		case MOVE_ZOMBONI:
+			// 冰车
+			break;
+		default:
+			break;
+	}
+
+	// 计算小丑爆炸倒计时
 	if (type == ZombieType::JACK_IN_THE_BOX) {
 		int earlyExplode = game.getRandomInt(0, 20);
 		//取0早爆，否则晚爆
-		if (earlyExplode == 0) {
-			stateCountDown = int(int((game.getRandomInt(0, 300) + 450) / 3) / relativeSpeed) * 2;
+		if (earlyExplode == 0 || game.getClownEarlyExplode()) {
+			stateCountDown = int(int((game.getRandomInt(0, 300) + 450) / 3.0) / relativeSpeed) * 2;
 		}
 		else {
 			stateCountDown = int((game.getRandomInt(0, 300) + 450) / relativeSpeed) * 2;
 		}
-	}
-
-	isEating = false;
-	damage = 0;
-
-	switch (movementType())
-	{
-	case MOVE_UNKNOWN:
-	case MOVE_EVEN_RELA_SPEED_FIXED:
-	case MOVE_UNEVEN_RELA_SPEED_FIXED:
-		relativeSpeed = 0;
-		// 目前不支持
-		break;
-	case MOVE_EVEN_RELA_SPEED_RANDOM:
-		// 气球 矿工 篮球
-		if (_relativeSpeed < RELATIVE_SPEED_RANDOM + 1) {
-			relativeSpeed = game.getRandomFloat(prop->relativeSpeedLower, prop->relativeSpeedHigher);
-		}
-		else {
-			relativeSpeed = _relativeSpeed;
-		}
-		xspeed = - relativeSpeed;
-		break;
-	case MOVE_UNEVEN_RELA_SPEED_RANDOM:
-		// 撑杆 橄榄 小丑 梯子 巨人
-		if (_relativeSpeed < RELATIVE_SPEED_RANDOM + 1) {
-			relativeSpeed = game.getRandomFloat(prop->relativeSpeedLower, prop->relativeSpeedHigher);
-		}
-		else {
-			relativeSpeed = _relativeSpeed;
-		}
-		progress_delta = relativeSpeed * float(47) * float(0.01) / prop->totalShift;
-		anim_progress = progress_delta;
-		replacement = progress_delta * prop->groundSize;
-		xspeed = - prop->shift[int(anim_progress * prop->shiftSize)] * replacement;
-		break;
-	case MOVE_IMP:
-		// 小鬼
-		break;
-	case MOVE_ZOMBONI:
-		// 冰车
-		break;
-	default:
-		break;
 	}
 }
 
@@ -454,7 +481,7 @@ bool Zombie::judgeClownExplodePlant(Plant* plant) {
 		plant->clownDefWidth(),
 		plant->defHeight(),
 		int(abscissa) + 60,
-		int(ordinate+roofHeight) + 60,
+		int(ordinate + roofHeight) + 60,
 		90
 	);
 }
@@ -485,19 +512,18 @@ Zombie* Zombie::throwImp(int _impRnd, bool stackHigher) {
 	imp->abscissa = int(abscissa) - 133;
 	imp->ordinate = ordinate;	// 能扔出小鬼的巨人不会有天台y偏移
 	imp->height = 88;
-	switch (game.getScene())
-	{
-	case SceneType::DE:
-	case SceneType::NE:
-	case SceneType::PE:
-	case SceneType::FE:
-		imp->hspeed = (int(abscissa) - 360 - impRnd) / 120.0;
-		break;
-	case SceneType::RE:
-	case SceneType::ME:
-		imp->hspeed = (int(abscissa) - 360 - 180 - impRnd) / 120.0;
-	default:
-		break;
+	switch (game.getScene()) {
+		case SceneType::DE:
+		case SceneType::NE:
+		case SceneType::PE:
+		case SceneType::FE:
+			imp->hspeed = (int(abscissa) - 360 - impRnd) / 120.0;
+			break;
+		case SceneType::RE:
+		case SceneType::ME:
+			imp->hspeed = (int(abscissa) - 360 - 180 - impRnd) / 120.0;
+		default:
+			break;
 	}
 	if (stackHigher) {
 		imp->update();

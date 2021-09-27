@@ -7,26 +7,25 @@ Plant::Plant(PlantType _type, int _row, int _col, int _state) {
 	type = _type;
 	row = _row;
 	col = _col;
-	switch (type)
-	{
-	case PlantType::NORMAL:
-		defXShift = 30;
-		defXWidth = 20;
-		break;
-	case PlantType::COB_CANNON:
-		defXShift = 20;
-		defXWidth = 100;
-		break;
-	case PlantType::TALL_NUT:
-		defXShift = 30;
-		defXWidth = 40;
-		break;
-	case PlantType::PUMPKIN:
-		defXShift = 20;
-		defXWidth = 60;
-		break;
-	default:
-		break;
+	switch (type) {
+		case PlantType::NORMAL:
+			defXShift = 30;
+			defXWidth = 20;
+			break;
+		case PlantType::COB_CANNON:
+			defXShift = 20;
+			defXWidth = 100;
+			break;
+		case PlantType::TALL_NUT:
+			defXShift = 30;
+			defXWidth = 40;
+			break;
+		case PlantType::PUMPKIN:
+			defXShift = 20;
+			defXWidth = 60;
+			break;
+		default:
+			break;
 	}
 	clownDefXShift = defXShift - 20;
 	clownDefXWidth = defXWidth + 40;
@@ -35,22 +34,24 @@ Plant::Plant(PlantType _type, int _row, int _col, int _state) {
 
 int Plant::ordinate() {
 	int _ordinate = -1;
-	switch (game.getScene())
-	{
-	case SceneType::DE:
-	case SceneType::NE:
-		_ordinate = 80 + row * 100;
-	case SceneType::PE:
-	case SceneType::FE:
-		_ordinate = 80 + row * 85;
-	case SceneType::RE:
-	case SceneType::ME:
-		_ordinate = 70 + row * 85;
-		if (col <= 4) {
-			_ordinate += 20 * col;
-		}
-	default:
-		break;
+	switch (game.getScene()) {
+		case SceneType::DE:
+		case SceneType::NE:
+			_ordinate = 80 + row * 100;
+			break;
+		case SceneType::PE:
+		case SceneType::FE:
+			_ordinate = 80 + row * 85;
+			break;
+		case SceneType::RE:
+		case SceneType::ME:
+			_ordinate = 70 + row * 85;
+			if (col <= 4) {
+				_ordinate += 20 * col;
+			}
+			break;
+		default:
+			break;
 	}
 	return _ordinate;
 }
@@ -73,6 +74,13 @@ void Plant::hammerCrush() {
 	}
 }
 
+// 此处有一小bug，起跳的窝瓜仍能被小丑炸到，待细化
+void Plant::explode() {
+	if (state == PLANT_STATE_NORMAL || state == PLANT_STATE_INVINCIBLE) {
+		state = PLANT_STATE_EXPLODED;
+	}
+}
+
 void Plant::update() {
 	if (damage >= 300 && state == PLANT_STATE_NORMAL) {
 		state = PLANT_STATE_DEAD;
@@ -82,4 +90,9 @@ void Plant::update() {
 void Plant::update(int tick) {
 	for (int i = 0; i < tick; i++)
 		update();
+}
+
+bool Plant::isDisappeard() {
+	return state == PLANT_STATE_DEAD || state == PLANT_STATE_CRUSHED || state == PLANT_STATE_HAMMERED
+		|| state == PLANT_STATE_EXPLODED || state == PLANT_STATE_SHOVELED;
 }
