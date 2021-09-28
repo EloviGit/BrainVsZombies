@@ -4,6 +4,8 @@
 #include "Plant.h"
 #include "PlantEffect.h"
 #include <queue>
+#include <fstream>
+#include <cassert>
 
 enum class SceneType {
 	DE = 0,
@@ -14,19 +16,31 @@ enum class SceneType {
 	ME = 5,
 };
 
-class Game
-{
+enum class DebugMode {
+	OFF = 0,
+	INACTIVE,
+	ACTIVE,
+};
+
+class Game {
 	SceneType scene;
 	int randomSeed;
 	bool clownExplode = false;
+	bool clownEarlyExplode = false;
 	int gameClock;
+	int zombieID = 0;
+	int plantID = 0;
+	DebugMode debugMode = DebugMode::OFF;
+	std::string logFilename = "output/log.csv";
+	std::ofstream logFile;
 
 public:
 	std::vector<Zombie*> zombieList;
 	std::vector<Plant*> plantList;
 	std::priority_queue<PlantEffect*, std::vector<PlantEffect*>, std::greater<PlantEffect*>> plantEffectList;
 
-	Game(SceneType _scene = SceneType::PE, int _randomSeed=0);
+	Game(SceneType _scene = SceneType::PE, int _randomSeed = 0);
+	~Game();
 
 	SceneType getScene() { return scene; }
 	void setScene(SceneType _scene) { scene = _scene; }
@@ -38,8 +52,15 @@ public:
 
 	bool getClownExplode() { return clownExplode; }
 	void setClownExplode(bool toExplode);
+	bool getClownEarlyExplode() { return clownEarlyExplode; }
+	void setClownEarlyExplode(bool toExplode) { clownEarlyExplode = toExplode; }
+	bool debug() { return debugMode == DebugMode::ACTIVE; }
+	void setDebug(bool debug);
+	void log(std::string line) { assert(debugMode == DebugMode::ACTIVE); logFile << line; }
 
 	int getGameClock() { return gameClock; }
+	int getZombieID() { return zombieID++; }
+	int getPlantID() { return plantID++; }
 
 	void reportError(std::string info);
 
@@ -60,4 +81,7 @@ public:
 	Zombie* findFastestZombie(ZombieType _type);
 	Zombie* findSlowestZombie();
 	Zombie* findSlowestZombie(ZombieType _type);
+	Zombie* findZombieById(int id);
+
+	std::string getTimestamp();
 };

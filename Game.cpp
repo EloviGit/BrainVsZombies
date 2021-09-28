@@ -3,9 +3,11 @@
 #include <ctime>
 #include <iostream>
 #include <algorithm>
+#include <iomanip>
+#include <ctime>
+#include <sstream>
 
-Game::Game(SceneType _scene, int _randomSeed)
-{
+Game::Game(SceneType _scene, int _randomSeed) {
 	scene = _scene;
 	if (_randomSeed == 0) {
 		randomSeed = (unsigned int)(time(NULL));
@@ -15,6 +17,12 @@ Game::Game(SceneType _scene, int _randomSeed)
 	}
 	srand(randomSeed);
 	gameClock = 0;
+}
+
+Game::~Game() {
+	if (debugMode != DebugMode::OFF) {
+		logFile.close();
+	}
 }
 
 void Game::resetSeed(int seed) {
@@ -57,8 +65,7 @@ void Game::resetGame(SceneType _scene) {
 		delete (*it);
 	}
 
-	while (!plantEffectList.empty())
-	{
+	while (!plantEffectList.empty()) {
 		PlantEffect* top = plantEffectList.top();
 		delete top;
 		plantEffectList.pop();
@@ -92,8 +99,7 @@ void Game::addPlantEffect(PlantEffect* plantEffect) {
 
 void Game::addPlantEffects(std::vector<PlantEffect*> plantEffects) {
 	std::vector<PlantEffect*>::iterator it = plantEffects.begin();
-	for (; it != plantEffects.end(); it ++)
-	{
+	for (; it != plantEffects.end(); it++) {
 		plantEffectList.push(*it);
 	}
 }
@@ -109,10 +115,11 @@ void Game::recycleTopPlantEffect() {
 void Game::update() {
 	gameClock++;
 
-	while(!plantEffectList.empty()) {
+	while (!plantEffectList.empty()) {
 		if (plantEffectList.top()->time < gameClock) {
 			recycleTopPlantEffect();
-		} else if (plantEffectList.top()->time == gameClock) {
+		}
+		else if (plantEffectList.top()->time == gameClock) {
 			if (plantEffectList.top()->effectType == EffectType::PLANT_EFFECT) {
 				plantEffectList.top()->effect();
 			}
@@ -121,7 +128,8 @@ void Game::update() {
 				break;
 			}
 			recycleTopPlantEffect();
-		} else {
+		}
+		else {
 			// plantEffectList.top()->time > gameClock
 			break;
 		}
@@ -158,7 +166,7 @@ Zombie* Game::findFastestZombie() {
 	}
 	else {
 		Zombie* fastest = *zombieList.begin();
-		for (std::vector<Zombie*>::iterator it = zombieList.begin() + 1; it<zombieList.end(); it++) {
+		for (std::vector<Zombie*>::iterator it = zombieList.begin() + 1; it < zombieList.end(); it++) {
 			if (fastest->abscissa > (*it)->abscissa) {
 				fastest = (*it);
 			}
@@ -222,5 +230,39 @@ Zombie* Game::findSlowestZombie(ZombieType _type) {
 			}
 		}
 		return slowest;
+	}
+}
+
+Zombie* Game::findZombieById(int _id) {
+	if (!zombieList.empty()) {
+		for (std::vector<Zombie*>::iterator it = zombieList.begin(); it < zombieList.end(); it++) {
+			if ((*it)->id == _id) {
+				return (*it);
+			}
+		}
+	}
+	return nullptr;
+}
+
+std::string Game::getTimestamp() {
+	auto t = std::time(nullptr);
+	struct tm buf;
+	localtime_s(&buf, &t);
+	std::ostringstream oss;
+	oss << std::put_time(&buf, "%Y-%m-%d_%H.%M.%S");
+	return oss.str();
+}
+
+void Game::setDebug(bool _debug) {
+	if (_debug) {
+		if (debugMode == DebugMode::OFF) {
+			logFile.open(logFilename, std::ios::out | std::ios::trunc);
+			logFile << "clock,category,id,exist_time/type,row,col,absc,ord,state,eat/dmg,state_countdown,freeze_countdown,iced_countdown,\n";
+			debugMode = DebugMode::ACTIVE;
+		}
+		else if (debugMode == DebugMode::INACTIVE) debugMode = DebugMode::ACTIVE;
+	}
+	else {
+		if (debugMode == DebugMode::ACTIVE) debugMode = DebugMode::INACTIVE;
 	}
 }

@@ -61,7 +61,7 @@
 #define RELATIVE_SPEED_RANDOM				-1.0f	// 随机生成相对速度
 
 enum class ZombieType {
-	ZOMBIE=0,		// 普僵
+	ZOMBIE = 0,		// 普僵
 	FLAG,			// 旗帜
 	CONEHEAD,		// 路障
 	POLE_VAULTING,	// 撑杆
@@ -87,11 +87,10 @@ enum class ZombieType {
 	GARGANTUAR,		// 巨人
 	IMP,			// 小鬼
 	DR_ZOMBOSS,		// 僵王
-	GIGA=26,		// 红眼
+	GIGA = 26,		// 红眼
 };
 
-typedef struct zombie_property
-{
+typedef struct zombie_property {
 public:
 	std::string name;
 	int defXShift;
@@ -118,12 +117,12 @@ public:
 
 void ReadZombieProperty();
 
-class Zombie
-{
+class Zombie {
 public:
 	ZombieProperty* prop;
 	ZombieType type;
 	int state;
+	int id = -1;
 
 	int row;
 	float abscissa;
@@ -162,23 +161,24 @@ public:
 		}
 	}
 	int defHeight() { return prop->defHeight; }
-	int atkAbscissa() { return (int)(abscissa) + prop->atkXShift; }
+	int atkAbscissa() { return (int)(abscissa)+prop->atkXShift; }
 	int atkWidth() { return prop->atkWidth; }
-	
+
 	int movementType() { return prop->movementType; }
 	int generationType() { return prop->genType; }
 	int spawnType() { return prop->spawnType; }
 	int attackType() { return prop->atkType; }
 	int iceType() { return prop->iceType; }
+	bool isDisappeared();
 
-	Zombie(ZombieType _type, int _row=0, float _abscissa=ABSC_SPAWN_RANDOM, float _relativeSpeed=RELATIVE_SPEED_RANDOM);
-	~Zombie(){}
+	Zombie(ZombieType _type, int _row = 0, float _abscissa = ABSC_SPAWN_RANDOM, float _relativeSpeed = RELATIVE_SPEED_RANDOM);
+	~Zombie() {}
 
 	void update();
 	void update(int tick);
 
 	// 范围： 0~100，可以取到0和100，但401~500只能为0
-	Zombie* throwImp(int _impRnd=-1, bool stackHigher=true);
+	Zombie* throwImp(int _impRnd = -1, bool stackHigher = true);
 
 	std::vector<Zombie*> throwAllImps();
 
