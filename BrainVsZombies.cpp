@@ -184,13 +184,19 @@ void test() {
 
 // 测试小丑在指定时间段内的炸炮数
 void testJackTime(int sample_size, size_t start_tick, size_t end_tick, int ice_time = 1, int dc_time = -1, bool debug = false) {
+	assert(end_tick > start_tick && ((dc_time == -1) || (start_tick > dc_time + 266)));
 	int startRunningTime = GetTickCount64();
 	const int ZOM_NUM = 5;
 	std::vector<ZombieType> types{ ZombieType::JACK_IN_THE_BOX, ZombieType::LADDER, };
 	std::vector<int> cob_rows{ 0, 1, 4, 5 };
 	std::vector<int> zom_rows{ 0, 1, 4, 5 };
-	std::vector<int> loss_counter(end_tick - start_tick), hp_counter(end_tick - start_tick);
-	std::vector<std::vector<int>> explodeInfo(cob_rows.size(), std::vector<int>(zom_rows.size()));
+	std::vector<std::vector<int>> loss_counter(end_tick - start_tick, std::vector<int>(cob_rows.size())), hp_counter(end_tick - start_tick, std::vector<int>(cob_rows.size()));
+	std::vector<std::vector<std::vector<int>>> explodeInfo(end_tick - start_tick, std::vector<std::vector<int>>(cob_rows.size(), std::vector<int>(3)));
+
+	// 创建反向映射，提高运行效率
+	std::sort(cob_rows.begin(), cob_rows.end());
+	std::vector<int> row_to_cob(cob_rows.back() + 1, -1);
+	for (int i = 0; i < cob_rows.size(); ++i) row_to_cob[cob_rows[i]] = i;
 
 	std::stringstream filename;
 	std::ofstream file;
@@ -238,50 +244,33 @@ void testJackTime(int sample_size, size_t start_tick, size_t end_tick, int ice_t
 		}
 
 		for (int t = 0; t < end_tick - start_tick; t++) {
-			int sum = 0;
-			int hp_loss = 0;
 			for (std::vector<Plant*>::iterator it = game.plantList.begin(); it != game.plantList.end(); it++) {
 				if ((*it)->getType() == PlantType::COB_CANNON) {
-					if ((*it)->isDisappeared()) sum++;
-					else hp_loss += (*it)->getDamage();
+					if ((*it)->isDisappeared()) {
+						loss_counter[t][row_to_cob[(*it)->row]]++;
+						std::vector<int> jack_rows = (*it)->getExplodeRow();
+						for (int i = 0; i < jack_rows.size(); i++) explodeInfo[t][row_to_cob[(*it)->row]][i] += jack_rows[i];
+					}
+					else hp_counter[t][row_to_cob[(*it)->row]] += (*it)->getDamage();
 				}
 			}
-			loss_counter[t] += sum;
-			hp_counter[t] += hp_loss;
 			game.update();
 		}
-
-		// 记录爆炸信息
-		for (std::vector<Plant*>::iterator it = game.plantList.begin(); it != game.plantList.end(); it++) {
-			if ((*it)->getType() == PlantType::COB_CANNON && (*it)->getState() == PLANT_STATE_EXPLODED) {
-				auto cob_index = std::find(cob_rows.begin(), cob_rows.end(), (*it)->row);
-				if (cob_index == cob_rows.end()) continue;
-				Zombie* zom = game.findZombieById((*it)->getExplodeID());
-				if (zom == nullptr) continue;
-				auto zom_index = std::find(zom_rows.begin(), zom_rows.end(), zom->row);
-				if (zom_index == zom_rows.end()) continue;
-				explodeInfo[cob_index - cob_rows.begin()][zom_index - zom_rows.begin()]++;
-			}
-		}
-
 		if (l % divide == 0) {
 			std::cout << l + 1 << " completed\n";
 		}
 	}
 
 	// 输出
-	file << ",";
-	for (auto r : zom_rows) file << r << ",";
-	file << "\n";
-	for (int i = 0; i < cob_rows.size(); i++) {
-		file << cob_rows[i] << ",";
-		for (auto r : explodeInfo[i]) file << r << ",";
-		file << "\n";
-	}
-	file << "time,cob_loss,hp_loss,num,avg_loss\n";
+	file << "time,cob_row,cob_loss,loss_hi,loss_same,loss_lo,hp_loss,num,avg_loss\n";
 	for (int i = 0; i < end_tick - start_tick; i++) {
-		file << start_tick + i << "," << loss_counter[i] << "," << hp_counter[i]
-			<< "," << sample_size * cob_rows.size() - loss_counter[i] << "," << double(hp_counter[i]) / (sample_size * cob_rows.size() - loss_counter[i]) << ",\n";
+		for (int j = 0; j < cob_rows.size(); j++) {
+			file << start_tick + i << "," << cob_rows[j] << "," << loss_counter[i][j] << ",";
+			for (int k = 0; k < 3; k++)
+				if (loss_counter[i][j] == 0) file << "0,";
+				else file << double(explodeInfo[i][j][k]) / loss_counter[i][j] << ",";
+			file << hp_counter[i][j] << "," << sample_size - loss_counter[i][j] << "," << double(hp_counter[i][j]) / (sample_size - loss_counter[i][j]) << ",\n";
+		}
 	}
 	file.close();
 	int endRunningTime = GetTickCount64();
@@ -298,8 +287,7 @@ int main() {
 	//getFastChart(11, simulationTime);
 //    test();
 
-	testJackTime(10000, 1200, 1500, 1, 770, false);
-	testJackTime(10000, 1200, 1500, 1, 824, false);
+	testJackTime(10000, 1050, 1160, 1, -1, false);
 
 	system("pause");
 }

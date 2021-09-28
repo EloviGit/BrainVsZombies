@@ -81,6 +81,9 @@ void Plant::explode(int zombie_id) {
 	if (state == PLANT_STATE_NORMAL || state == PLANT_STATE_INVINCIBLE) {
 		state = PLANT_STATE_EXPLODED;
 		explodeID = zombie_id;
+		Zombie* zom = game.findZombieById(zombie_id);
+		if (zom == nullptr || zom->row < row - 1 || zom->row > row + 1) return;
+		explodeRow[zom->row - row + 1]++;
 	}
 }
 

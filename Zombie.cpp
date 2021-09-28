@@ -244,11 +244,11 @@ void Zombie::update() {
 	else if (state == STATE_CLOWN_EXPLODE) {
 		if (stateCountDown == 0) {
 			// 爆炸生效，清除爆炸范围内所有植物与小丑
+			std::vector<Plant*> explode_list;
 			for (std::vector<Plant*>::iterator it = game.plantList.begin(); it != game.plantList.end(); it++) {
-				if (judgeClownExplodePlant(*it) && !(*it)->isDisappeared()) {
-					(*it)->explode(id);
-				}
+				if (judgeClownExplodePlant(*it)) explode_list.push_back(*it);
 			}
+			for (auto p : explode_list) if (!p->isDisappeared()) p->explode(id);
 			kill();
 		}
 	}

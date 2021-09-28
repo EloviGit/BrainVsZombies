@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <vector>
 
 #define PLANT_STATE_NORMAL		0	// 正常
 #define PLANT_STATE_DEAD		1	// 被啃食导致死亡
@@ -30,6 +31,7 @@ class Plant {
 	int damage = 0;
 	int id = -1;
 	int explodeID = -1;		// 炸掉植物的小丑id
+	std::vector<int> explodeRow = std::vector<int>(3);	// 炸掉植物的小丑所在行数（上/本/下），增加运行效率
 
 public:
 	int row;
@@ -52,13 +54,14 @@ public:
 	PlantType getType() { return type; }
 	std::string getTypeStr();
 	int getExplodeID() { return explodeID; }
+	std::vector<int>& getExplodeRow() { return explodeRow; }
 
 	void hit();
 	int getDamage() { return damage; }
 
 	void crush();
 	void hammerCrush();
-	void explode(int zombie_id = -1);
+	void explode(int zombie_id);
 	void shovel() { if (!isDisappeared()) state = PLANT_STATE_SHOVELED; }
 
 	void update();
